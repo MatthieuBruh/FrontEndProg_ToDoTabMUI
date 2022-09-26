@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import TodoTable from './TodoTable';
 
 
 
@@ -21,6 +22,10 @@ function TodoList () {
             date: ''
         });
     };
+
+    const deleteTodo = (rowIndex) => {
+        setTodos(todos.filter((todo, index) => index !== rowIndex));
+    }
 
 
     return (
@@ -55,31 +60,7 @@ function TodoList () {
                 <button onClick={addTodo}>Add</button>
             </fieldset>
 
-            <div>
-                <table className='myTable' >
-                    <thead>
-                        <tr>
-                            <td className='myTableRowHead'>Date</td>
-                            <td className='myTableRowHead'>Description</td>
-                            <td></td>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    {
-                        todos.map((todo, index) =>
-                            <tr key={index} className="myTableRow">
-                                <td>{todo.date}</td>
-                                <td>{todo.description}</td>
-                                <td>
-                                    <button onClick={() => {
-                                        setTodos([...todos.filter((todo, i) => i !== index)])
-                                    }}>Delete</button>
-                                </td>
-                            </tr>
-                        )
-                    }
-                </tbody></table>
-            </div>
+            <TodoTable todos={todos} deleteTodo={deleteTodo} />
         </div>
         
     );
