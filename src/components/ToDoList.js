@@ -1,14 +1,31 @@
-import React, { useState } from 'react';
-import TodoTable from './TodoTable';
+import React, { useState, useRef } from 'react';
+import { AgGridReact } from 'ag-grid-react';
 
+import 'ag-grid-community/styles/ag-grid.css';
+import 'ag-grid-community/styles/ag-theme-material.css';
 
 
 function TodoList () {
     const [todos, setTodos] = useState([]);
     const [todo, setTodo] = useState({
         description: '',
-        date: ''
+        date: '',
+        priority: ''
     });
+
+    const gridRef = useRef();
+    const [columnDefs] = useState([
+        {field: 'description', sortable: true, filter: true, floatingFilter: true},
+        {field: 'date', sortable: true, filter: true, floatingFilter: true},
+        {field: 'priority',
+            sortable: true,
+            filter: true,
+            floatingFilter: true,
+            // cellStyle: params => params.value === 'High' ? {color: 'red'} : {color: 'black'}
+            cellStyle: params => params.value === 'High' ? {color: 'red'} : params.value === 'Medium' ? {color: 'orange'} : {color: 'green'}
+        }
+    ]);
+    
 
 
     const addTodo = () => {
@@ -19,12 +36,18 @@ function TodoList () {
         setTodos([...todos, todo]);
         setTodo({
             description: '',
-            date: ''
+            date: '',
+            priority: ''
         });
     };
 
-    const deleteTodo = (rowIndex) => {
-        setTodos(todos.filter((todo, index) => index !== rowIndex));
+    const deleteTodo = () => {
+        if (gridRef.current.getSelectedNodes().length > 0) {
+            setTodos(todos.filter((todo,index) => index !== gridRef.current.getSelectedNodes()[0].childIndex));
+            return;
+        }
+        alert("Please select a row to delete");
+        return;
     }
 
 
@@ -57,10 +80,33 @@ function TodoList () {
                     })}
                 />
 
+                <label>Priority:</label>
+                <input
+                    type="text"
+                    value={todo.priority}
+                    onChange={event => setTodo({
+                        ...todo,
+                        priority: event.target.value
+                    })}
+                />
+
                 <button onClick={addTodo}>Add</button>
+                &nbsp;
+                <button onClick={deleteTodo}>Delete</button>
             </fieldset>
 
-            <TodoTable todos={todos} deleteTodo={deleteTodo} />
+            
+
+            <div className="ag-theme-material" style={{ width: '35%', height: 500, margin: 'auto' }}>
+                <AgGridReact
+                    ref={gridRef}
+                    onGridReady={params => gridRef.current = params.api}
+                    rowSelection="single"
+                    rowData={todos}
+                    columnDefs={columnDefs}
+                    animateRows={true}
+                />
+            </div>
         </div>
         
     );
