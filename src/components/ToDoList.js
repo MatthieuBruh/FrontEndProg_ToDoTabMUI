@@ -13,8 +13,6 @@ import Snackbar from '@mui/material/Snackbar';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { DatePicker } from '@mui/x-date-pickers';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
-import { parseISO } from 'date-fns';
-
 
 function TodoList () {
     const [todos, setTodos] = useState([]);
