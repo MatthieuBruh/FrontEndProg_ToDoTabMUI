@@ -4,15 +4,25 @@ import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-material.css';
 
+import Button from '@mui/material/Button';
+import TextField from '@mui/material/TextField';
+import Stack from '@mui/material/Stack';
+import DeleteIcon from '@mui/icons-material/Delete';
+import AddIcon from '@mui/icons-material/Add';
+import Snackbar from '@mui/material/Snackbar';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { DatePicker } from '@mui/x-date-pickers';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
+import { parseISO } from 'date-fns';
+
 
 function TodoList () {
     const [todos, setTodos] = useState([]);
     const [todo, setTodo] = useState({
         description: '',
-        date: '',
+        date: new Date(),
         priority: ''
     });
-
     const gridRef = useRef();
     const [columnDefs] = useState([
         {field: 'description', sortable: true, filter: true, floatingFilter: true},
@@ -25,7 +35,7 @@ function TodoList () {
             cellStyle: params => params.value === 'High' ? {color: 'red'} : params.value === 'Medium' ? {color: 'orange'} : {color: 'green'}
         }
     ]);
-    
+    const [open, setOpen] = useState(false); // For the SnackBar
 
 
     const addTodo = () => {
@@ -33,10 +43,11 @@ function TodoList () {
             alert("Description and date must be defined");
             return;
         }
+        todo.date = todo.date.toISOString().substring(0, 10);
         setTodos([...todos, todo]);
         setTodo({
             description: '',
-            date: '',
+            date: new Date(),
             priority: ''
         });
     };
@@ -44,25 +55,34 @@ function TodoList () {
     const deleteTodo = () => {
         if (gridRef.current.getSelectedNodes().length > 0) {
             setTodos(todos.filter((todo,index) => index !== gridRef.current.getSelectedNodes()[0].childIndex));
+            setOpen(true);
             return;
         }
         alert("Please select a row to delete");
         return;
     }
 
+    const changeDate = (newValue) => {
+        setTodo({
+            ...todo,
+            date: newValue
+        });
+    }
+
 
     return (
         <div>
-            <div className='myTitleContainer' >
-                <h1 className='myTitle' >Simple TodoList</h1>
-            </div>
 
-            <fieldset className='myFieldset'>
-                <legend align="left" >Add todo:</legend>
+            <Stack
+                direction="row"
+                spacing={2}
+                alignItems="center"
+                justifyContent="center">
 
-                <label>Description:</label>
-                <input
+                <TextField
+                    variant="standard"
                     type="text"
+                    label="Description"
                     value={todo.description}
                     onChange={event => setTodo({
                         ...todo,
@@ -70,19 +90,25 @@ function TodoList () {
                     })}
                 />
 
-                <label>Date:</label>
-                <input
-                    type="date"
-                    value={todo.date}
-                    onChange={event => setTodo({
-                        ...todo,
-                        date: event.target.value
-                    })}
-                />
+                <LocalizationProvider dateAdapter={AdapterDateFns}>
+                    <DatePicker
+                        views={['year', 'month', 'day']}
+                        label="Year, Month and Day"
+                        minDate={new Date('2012-03-01')}
+                        maxDate={new Date('2023-06-01')}
+                        value={todo.date}
+                        onChange={(newValue) => {
+                        changeDate(newValue);
+                        }}
+                        renderInput={ (props) =>
+                            <TextField  {...props} size='small' helperText={null}/>}
+                    />
+                </LocalizationProvider>
 
-                <label>Priority:</label>
-                <input
+                <TextField
+                    variant="standard"
                     type="text"
+                    label="Priority"
                     value={todo.priority}
                     onChange={event => setTodo({
                         ...todo,
@@ -90,10 +116,18 @@ function TodoList () {
                     })}
                 />
 
-                <button onClick={addTodo}>Add</button>
-                &nbsp;
-                <button onClick={deleteTodo}>Delete</button>
-            </fieldset>
+                <Button
+                    variant="contained"
+                    startIcon={<AddIcon />}
+                    onClick={addTodo}>Add
+                </Button>
+                <Button
+                    variant="contained"
+                    color="error"
+                    onClick={deleteTodo}
+                    startIcon={<DeleteIcon />}>Delete
+                </Button>
+            </Stack>
 
             
 
@@ -107,6 +141,13 @@ function TodoList () {
                     animateRows={true}
                 />
             </div>
+
+            <Snackbar
+                open={open}
+                autoHideDuration={3000}
+                onClose={() => setOpen(false)}
+                message="To do deleted successfully"
+            />
         </div>
         
     );
